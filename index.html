@@ -134,6 +134,12 @@ const STANDS=["Star Platinum","The World","Magicians Red","Silver Chariot","Hier
 const FAMS=["Joestar","Zeppeli","Brando","Higashikata","Kujo","Polnareff","Kakyoin","Speedwagon","Nijimura","Kira","Avdol"];
 // Sub-roleta só para os clãs Joestar, Brando e Zeppeli
 const CHANCE=0.10;
+// Cole aqui a URL do Apps Script (veja LOG-SETUP.md). Vazio = log remoto desligado.
+const LOG_URL="";
+function sendLog(e){
+  if(!LOG_URL)return;
+  try{fetch(LOG_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({data:e.iso,jogador:e.name,categoria:e.cat,resultado:e.res,bonus:e.bonus,giro:e.spin})}).catch(()=>{})}catch(err){}
+}
 const SUB={Joestar:["Stand"],Brando:["Stand"],Zeppeli:["Spin","Hamon"]};
 const CATS={stand:{name:"Stands",limit:1,orig:STANDS},fam:{name:"Famílias",limit:8,orig:FAMS}};
 const COLORS=["#065f46","#0b3d2e","#854d0e","#0c4a6e","#047857","#713f12"];
@@ -252,8 +258,8 @@ function finish(name,key,item){
   state.busy=false;$("spinBtn").disabled=false;
   const isFam=tab==="fam",sub=isFam?SUB[item.n]:null;
   const bonusTxt=isFam?(sub?"Sorteando Stand...":"Sem sub-roleta"):"-";
-  const entry={time:new Date().toLocaleTimeString("pt-BR"),name,cat:CATS[tab].name,res:item.n,bonus:bonusTxt};
-  state.hist.unshift(entry);
+  const entry={time:new Date().toLocaleTimeString("pt-BR"),iso:new Date().toLocaleString("pt-BR"),spin:state.spins[tab][key]+"/"+CATS[tab].limit,name,cat:CATS[tab].name,res:item.n,bonus:bonusTxt};
+  state.hist.unshift(entry);if(!sub)sendLog(entry);
   state.current=item;state.last=name;state.goStand=false;$("nextBtn").textContent="Próximo Jogador";
   $("mName").textContent=name;
   $("mCat").textContent=CATS[tab].name+(isFam?" – giro "+state.spins[tab][key]+" de "+CATS[tab].limit:"");
@@ -276,7 +282,7 @@ function rollStand(fam,opts,entry){
   setTimeout(()=>{
     $("subRes").textContent=res;$("subRes").style.color=ok?"var(--gold)":"#fca5a5";
     $("mNote").textContent=ok?"A linhagem "+fam+" liberou: "+got.join(" e ")+".":"A linhagem "+fam+" não liberou poder desta vez.";
-    entry.bonus=res;if(got.includes("Stand")){state.goStand=true;$("nextBtn").textContent="Girar Stand"}
+    entry.bonus=res;sendLog(entry);if(got.includes("Stand")){state.goStand=true;$("nextBtn").textContent="Girar Stand"}
     if(ok)fanfare();else tone(180,.4,"sawtooth",.06);
     $("nextBtn").disabled=false;$("closeBtn").disabled=false;$("fichaBtn").disabled=false;$("nextBtn").focus();
   },1000);
