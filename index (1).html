@@ -135,7 +135,7 @@ const FAMS=["Joestar","Zeppeli","Brando","Higashikata","Kujo","Polnareff","Kakyo
 // Sub-roleta só para os clãs Joestar, Brando e Zeppeli
 const CHANCE=0.10;
 // Cole aqui a URL do Apps Script (veja LOG-SETUP.md). Vazio = log remoto desligado.
-const LOG_URL="";
+const LOG_URL="https://script.google.com/macros/s/AKfycbyqZBS2EFw6baIYYJHgczu9L0ppCo-Ic6Ds5tERLkmAPoyYiTFC9HXWpSPGKJ0bolsj/exec";
 function sendLog(e){
   if(!LOG_URL)return;
   try{fetch(LOG_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({data:e.iso,jogador:e.name,categoria:e.cat,resultado:e.res,bonus:e.bonus,giro:e.spin})}).catch(()=>{})}catch(err){}
