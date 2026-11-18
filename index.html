@@ -135,8 +135,17 @@ const FAMS=["Joestar","Zeppeli","Brando","Higashikata","Kujo","Polnareff","Kakyo
 // Sub-roleta só para os clãs Joestar, Brando e Zeppeli
 const CHANCE=0.10;
 // Cole aqui a URL do Apps Script (veja LOG-SETUP.md). Vazio = log remoto desligado.
-const LOG_URL="https://script.google.com/macros/s/AKfycbyvc9C9vST_YWBkIYeW81_MTN1-y_vTh_AAps5Tlmy_23suvcJrGGJqAyNKbKdZQTBz/exec";
+const LOG_URL="";
+// Opção 2: cole aqui a URL do webhook do Discord (veja LOG-SETUP.md). Vazio = desligado.
+const DISCORD_URL="";
+function sendDiscord(e){
+  if(!DISCORD_URL)return;
+  const t=s=>String(s).slice(0,80);
+  const msg="🏇 **"+t(e.name)+"** | "+e.cat+": **"+t(e.res)+"** | Bônus: "+t(e.bonus)+" | Giro "+e.spin+" | "+e.iso;
+  try{fetch(DISCORD_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:"BLACKOUT Log",content:msg,allowed_mentions:{parse:[]}})}).catch(()=>{})}catch(err){}
+}
 function sendLog(e){
+  sendDiscord(e);
   if(!LOG_URL)return;
   try{fetch(LOG_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({data:e.iso,jogador:e.name,categoria:e.cat,resultado:e.res,bonus:e.bonus,giro:e.spin})}).catch(()=>{})}catch(err){}
 }
@@ -313,10 +322,11 @@ function fichaText(name){
   const key=name.toLowerCase();
   if(!reg[key])reg[key]=String(++regN).padStart(3,"0");
   const mine=state.hist.filter(h=>h.name.toLowerCase()===key).reverse();
-  const fams=mine.filter(h=>h.cat==="Famílias").map(h=>h.res);
+  const famH=mine.filter(h=>h.cat==="Famílias"),lastF=famH[famH.length-1];
+  const fams=lastF?[lastF.res]:[];
   const st=mine.filter(h=>h.cat==="Stands").map(h=>h.res);
   const ex=new Set();
-  mine.filter(h=>h.cat==="Famílias"&&h.bonus.startsWith("Pegou")).forEach(h=>h.bonus.replace("Pegou ","").split(" e ").forEach(p=>ex.add(p==="Stand"?"Stand (linhagem)":p)));
+  (lastF&&lastF.bonus.startsWith("Pegou")?[lastF]:[]).forEach(h=>h.bonus.replace("Pegou ","").split(" e ").forEach(p=>ex.add(p==="Stand"?"Stand (linhagem)":p)));
   const estilo=[...st,...ex].join(" + ")||"—";
   const giros="Stand "+(state.spins.stand[key]||0)+"/1 · Família "+(state.spins.fam[key]||0)+"/"+CATS.fam.limit;
   return [
